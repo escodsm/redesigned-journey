@@ -109,15 +109,25 @@ function resetLevel() {
 }
 
 document.addEventListener("keydown", e => {
+
   if (e.key === "ArrowLeft" && player.col > 0) {
     player.col--;
   }
+
   if (e.key === "ArrowRight" && player.col < COLS - 1) {
     player.col++;
   }
-  if (e.key === "ArrowUp" && player.row > 0) {
-    player.row--;
+
+  if (e.key === "ArrowUp") {
+    // Only climb if standing on a ledge
+    if (
+      player.row > 0 &&
+      map[player.row + 1]?.[player.col] === 1
+    ) {
+      player.row--;
+    }
   }
+
 });
 
 function gameLoop() {
