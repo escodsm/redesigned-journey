@@ -21,6 +21,7 @@ let map = generateMountain();
 
 function generateMountain() {
   let grid = [];
+
   for (let r = 0; r < ROWS; r++) {
     let row = [];
     for (let c = 0; c < COLS; c++) {
@@ -29,8 +30,13 @@ function generateMountain() {
     grid.push(row);
   }
 
+  // Base platform (guaranteed start)
+  for (let c = 0; c < COLS; c++) {
+    grid[ROWS - 1][c] = 1;
+  }
+
   // Random ledges
-  for (let r = 2; r < ROWS - 1; r += 3) {
+  for (let r = 3; r < ROWS - 2; r += 3) {
     let start = Math.floor(Math.random() * (COLS - 5));
     for (let i = 0; i < 5; i++) {
       grid[r][start + i] = 1;
