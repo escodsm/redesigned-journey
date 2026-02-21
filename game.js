@@ -74,10 +74,14 @@ function draw() {
 }
 
 function update() {
-  // Gravity
-  if (player.row < ROWS - 1 && map[player.row + 1][player.col] === 0) {
-    player.row += 1;
-  }
+ // Gravity
+let supported =
+  player.row < ROWS - 1 &&
+  map[player.row + 1][player.col] === 1;
+
+if (!supported) {
+  player.row++;
+}
 
   // Move rocks
   rocks.forEach(rock => rock.row += 1);
@@ -125,11 +129,16 @@ document.addEventListener("keydown", e => {
   }
 
   if (e.key === "ArrowUp") {
-    // Only climb if standing on a ledge
-    if (
+
+    let standingOnLedge =
+      player.row < ROWS - 1 &&
+      map[player.row + 1][player.col] === 1;
+
+    let spaceAbove =
       player.row > 0 &&
-      map[player.row + 1]?.[player.col] === 1
-    ) {
+      map[player.row - 1][player.col] === 0;
+
+    if (standingOnLedge && spaceAbove) {
       player.row--;
     }
   }
