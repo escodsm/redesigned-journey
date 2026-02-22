@@ -1,4 +1,4 @@
-//ver 5.1
+//ver 5.2
 const TILE = 16;
 const COLS = 20;
 const ROWS = 30;
@@ -292,6 +292,21 @@ function resetLevel() {
   map = generateMountain();
 }
 
+function canMantle() {
+
+  // must have room to move up 2 tiles
+  if (player.row <= 1) return false;
+
+  // tile directly above player (your blue debug box)
+  const above = map[player.row - 1][player.col];
+
+  // tile above that must be empty so we don't clip
+  const aboveAbove = map[player.row - 2][player.col];
+
+  // if head touches solid tile and space above it is empty
+  return (above === 1 || above === 2 || above === 3) && aboveAbove === 0;
+}
+
 document.addEventListener("keydown", function(e) {
   if (["ArrowLeft", "ArrowRight", "ArrowUp"].includes(e.key)) {
     e.preventDefault();
@@ -306,25 +321,38 @@ document.addEventListener("keydown", function(e) {
   }
 
   if (e.key === "ArrowUp") {
-    let supportedBefore =
-      player.row < ROWS - 1 &&
-      isSolid(getTile(player.row + 1, player.col));
 
-    let canClimb = supportedBefore || airClimbCount < 2;
+  let supportedBefore =
+    player.row < ROWS - 1 &&
+    (map[player.row + 1][player.col] === 1 ||
+     map[player.row + 1][player.col] === 2 ||
+     map[player.row + 1][player.col] === 3);
 
-    if (player.row > 0 && canClimb) {
-      player.row--;
-      justClimbed = true;
+  let canClimb = supportedBefore || airClimbCount < 2;
 
-      // Recompute support after moving up
-      let supportedAfter =
-        player.row < ROWS - 1 &&
-        isSolid(getTile(player.row + 1, player.col));
-
-      if (!supportedAfter) airClimbCount++;
-      else airClimbCount = 0;
-    }
+  // ===== NEW: mantle logic =====
+  if (!canClimb && canMantle()) {
+    player.row -= 2;      // pull up onto platform
+    justClimbed = true;
+    airClimbCount = 0;
+    return;
   }
+
+  if (player.row > 0 && canClimb) {
+
+    player.row--;
+    justClimbed = true;
+
+    let supportedAfter =
+      player.row < ROWS - 1 &&
+      (map[player.row + 1][player.col] === 1 ||
+       map[player.row + 1][player.col] === 2 ||
+       map[player.row + 1][player.col] === 3);
+
+    if (!supportedAfter) airClimbCount++;
+    else airClimbCount = 0;
+  }
+}
 });
 
 function gameLoop() {
