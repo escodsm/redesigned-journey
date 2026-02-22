@@ -136,19 +136,10 @@ document.addEventListener("keydown", e => {
   }
 
   if (e.key === "ArrowUp") {
-
-    let standingOnLedge =
-      player.row < ROWS - 1 &&
-      map[player.row + 1][player.col] === 1;
-
-    let spaceAbove =
-      player.row > 0 &&
-      map[player.row - 1][player.col] === 0;
-
-    if (standingOnLedge && spaceAbove) {
-      player.row--;
-    }
+  if (player.row > 0 && map[player.row - 1][player.col] === 0) {
+    player.row--;
   }
+}
 
 });
 
