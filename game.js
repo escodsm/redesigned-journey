@@ -132,7 +132,7 @@ function draw() {
 
 function isSolid(tile) {
   // === NEW: both ground and platforms are solid ===
-  return tile === 1 || tile === 2;
+  return tile === 1 || tile === 2 || tile === 3;
 }
 
 function getTile(row, col) {
