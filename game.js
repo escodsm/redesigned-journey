@@ -29,7 +29,7 @@ const MAX_JUMP_UP = 8;       // max vertical gap in tiles between reachable plat
 const MAX_JUMP_ACROSS = 5;   // max horizontal shift between successive platforms
 const MIN_PLATFORM_WIDTH = 3;
 const MAX_PLATFORM_WIDTH = 9;
-const GRAVITY = 6;              // tiles per tick (1 = current behavior)
+const GRAVITY = .1;              // tiles per tick (1 = current behavior)
 const FALL_DAMAGE_THRESHOLD = 8; // tiles fallen before losing a heart
 
 // === NEW: Collapse system ===
