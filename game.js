@@ -14,7 +14,6 @@ let airClimbCount = 0;
 let fallDistance = 0;
 let isFalling = false;
 
-
 let level = 1;
 
 let player = {
@@ -24,29 +23,69 @@ let player = {
 
 let rocks = [];
 
+// === NEW: Reachability tuning ===
+// Adjust these to match your game's feel.
+const MAX_JUMP_UP = 4;       // max vertical gap in tiles between reachable platforms
+const MAX_JUMP_ACROSS = 5;   // max horizontal shift between successive platforms
+const MIN_PLATFORM_WIDTH = 3;
+const MAX_PLATFORM_WIDTH = 6;
+
+// === NEW: Collapse system ===
+let collapsingPlatforms = []; // active collapses (objects)
+let armedCollapseKey = null;  // only arm collapse once per "standing on same platform"
+
 let map = generateMountain();
 
 function generateMountain() {
-  let grid = [];
+  let grid = Array.from({ length: ROWS }, () =>
+    Array(COLS).fill(0)
+  );
 
-  for (let r = 0; r < ROWS; r++) {
-    let row = [];
-    for (let c = 0; c < COLS; c++) {
-      row.push(0);
-    }
-    grid.push(row);
-  }
-
-  // Base platform (guaranteed start)
+  // Base ground
   for (let c = 0; c < COLS; c++) {
     grid[ROWS - 1][c] = 1;
   }
 
-  // Random ledges
-  for (let r = 3; r < ROWS - 2; r += 3) {
-    let start = Math.floor(Math.random() * (COLS - 5));
-    for (let i = 0; i < 5; i++) {
-      grid[r][start + i] = 1;
+  // Build a guaranteed reachable "path" of platforms upward.
+  let currentRow = ROWS - 4;
+  let currentCol = Math.floor(COLS / 2);
+
+  while (currentRow > 2) {
+    // platform width
+    let width = Math.floor(Math.random() * (MAX_PLATFORM_WIDTH - MIN_PLATFORM_WIDTH + 1)) + MIN_PLATFORM_WIDTH;
+
+    // horizontal shift within reach
+    let colShift = Math.floor(Math.random() * (MAX_JUMP_ACROSS * 2 + 1)) - MAX_JUMP_ACROSS;
+
+    currentCol = Math.max(
+      1,
+      Math.min(COLS - width - 1, currentCol + colShift)
+    );
+
+    // vertical shift within reach (at least 2 so it doesn't feel like stairs)
+    let rowShift = Math.floor(Math.random() * MAX_JUMP_UP) + 2;
+    currentRow -= rowShift;
+
+    // place platform tiles (2 = brown platform)
+    for (let w = 0; w < width; w++) {
+      if (currentRow >= 0 && currentRow < ROWS) {
+        grid[currentRow][currentCol + w] = 2;
+      }
+    }
+
+    // Optional: sprinkle a few extra random platforms nearby (still usually reachable)
+    if (Math.random() < 0.35 && currentRow > 3) {
+      let extraWidth = Math.floor(Math.random() * 3) + 2;
+      let extraRow = currentRow - (Math.random() < 0.5 ? 0 : 1);
+      let extraCol = currentCol + (Math.random() < 0.5 ? -(extraWidth + 1) : (width + 1));
+      extraCol = Math.max(0, Math.min(COLS - extraWidth, extraCol));
+
+      for (let w = 0; w < extraWidth; w++) {
+        if (extraRow >= 0 && extraRow < ROWS) {
+          // don't overwrite the main path; just add more ledges
+          if (grid[extraRow][extraCol + w] === 0) grid[extraRow][extraCol + w] = 2;
+        }
+      }
     }
   }
 
@@ -63,15 +102,18 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Draw hearts
-for (let i = 0; i < hearts; i++) {
-  ctx.fillStyle = "red";
-  ctx.fillRect(5 + i * 18, 5, 12, 12);
-}
-  // Draw mountain
+  for (let i = 0; i < hearts; i++) {
+    ctx.fillStyle = "red";
+    ctx.fillRect(5 + i * 18, 5, 12, 12);
+  }
+
+  // Draw mountain/platforms
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (map[r][c] === 1) {
-        drawTile(c, r, "#654321");
+        drawTile(c, r, "#654321"); // ground
+      } else if (map[r][c] === 2) {
+        drawTile(c, r, "#8b5a2b"); // brown platform
       }
     }
   }
@@ -79,12 +121,12 @@ for (let i = 0; i < hearts; i++) {
   // Draw player
   drawTile(player.col, player.row, "#00ffff");
 
-  // Debug tile markers
-ctx.fillStyle = "red";
-ctx.fillRect(player.col * TILE, (player.row + 1) * TILE, TILE, TILE);
+  // Debug tile markers (optional)
+  ctx.fillStyle = "red";
+  ctx.fillRect(player.col * TILE, (player.row + 1) * TILE, TILE, TILE);
 
-ctx.fillStyle = "blue";
-ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
+  ctx.fillStyle = "blue";
+  ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
 
   // Draw rocks
   rocks.forEach(rock => {
@@ -92,10 +134,89 @@ ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
   });
 }
 
+function isSolid(tile) {
+  // === NEW: both ground and platforms are solid ===
+  return tile === 1 || tile === 2;
+}
+
+function getTile(row, col) {
+  if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return 0;
+  return map[row][col];
+}
+
+function checkForCollapseArming() {
+  // If player's feet are supported by a brown platform, arm a collapse for that platform "segment"
+  const belowRow = player.row + 1;
+  const belowCol = player.col;
+
+  if (belowRow < 0 || belowRow >= ROWS) return;
+
+  if (getTile(belowRow, belowCol) !== 2) {
+    // not standing on brown; allow arming again later
+    armedCollapseKey = null;
+    return;
+  }
+
+  // Find the contiguous segment at that row (start/end of that platform run)
+  let start = belowCol;
+  let end = belowCol;
+
+  while (start > 0 && getTile(belowRow, start - 1) === 2) start--;
+  while (end < COLS - 1 && getTile(belowRow, end + 1) === 2) end++;
+
+  const key = `${belowRow}:${start}:${end}`;
+
+  // Only arm once per segment while you're on it
+  if (armedCollapseKey === key) return;
+  armedCollapseKey = key;
+
+  // Don’t duplicate if already collapsing
+  if (collapsingPlatforms.some(p => p.key === key)) return;
+
+  collapsingPlatforms.push({
+    key,
+    row: belowRow,
+    start,
+    end,
+    dir: Math.random() < 0.5 ? "left" : "right",
+    delay: 18,     // ticks before first crumble
+    stepDelay: 8   // ticks between each tile collapse
+  });
+}
+
+function updateCollapse() {
+  for (const p of collapsingPlatforms) {
+    if (p.delay > 0) {
+      p.delay--;
+      continue;
+    }
+
+    // crumble one tile
+    if (p.dir === "left") {
+      if (p.start <= p.end) {
+        map[p.row][p.start] = 0;
+        p.start++;
+      }
+    } else {
+      if (p.start <= p.end) {
+        map[p.row][p.end] = 0;
+        p.end--;
+      }
+    }
+
+    // reset delay between steps
+    p.delay = p.stepDelay;
+  }
+
+  // Remove finished collapses
+  collapsingPlatforms = collapsingPlatforms.filter(p => p.start <= p.end);
+}
+
 function update() {
+  // === NEW: support includes tile 1 or 2 ===
   let supported =
     player.row < ROWS - 1 &&
-    map[player.row + 1][player.col] === 1;
+    isSolid(getTile(player.row + 1, player.col));
 
   // Gravity (but not on the same tick we climbed)
   if (!supported && !justClimbed) {
@@ -115,8 +236,18 @@ function update() {
     airClimbCount = 0;
   }
 
+  // === NEW: arm collapse only when standing supported on brown ===
+  if (supported) {
+    checkForCollapseArming();
+  } else {
+    armedCollapseKey = null;
+  }
+
   // clear climb suppression at end of tick
   justClimbed = false;
+
+  // === NEW: update collapsing platforms ===
+  updateCollapse();
 
   // Move rocks
   rocks.forEach(rock => rock.row += 1);
@@ -150,11 +281,12 @@ function resetLevel() {
   player.col = 10;
   player.row = ROWS - 2;
   rocks = [];
+  collapsingPlatforms = [];
+  armedCollapseKey = null;
   map = generateMountain();
 }
 
 document.addEventListener("keydown", function(e) {
-
   if (["ArrowLeft", "ArrowRight", "ArrowUp"].includes(e.key)) {
     e.preventDefault();
   }
@@ -167,27 +299,26 @@ document.addEventListener("keydown", function(e) {
     player.col++;
   }
 
-if (e.key === "ArrowUp") {
-  let supportedBefore =
-    player.row < ROWS - 1 &&
-    map[player.row + 1][player.col] === 1;
-
-  let canClimb = supportedBefore || airClimbCount < 2;
-
-  if (player.row > 0 && canClimb) {
-    player.row--;
-    justClimbed = true;
-
-    // Recompute support after moving up
-    let supportedAfter =
+  if (e.key === "ArrowUp") {
+    let supportedBefore =
       player.row < ROWS - 1 &&
-      map[player.row + 1][player.col] === 1;
+      isSolid(getTile(player.row + 1, player.col));
 
-    if (!supportedAfter) airClimbCount++;
-    else airClimbCount = 0;
+    let canClimb = supportedBefore || airClimbCount < 2;
+
+    if (player.row > 0 && canClimb) {
+      player.row--;
+      justClimbed = true;
+
+      // Recompute support after moving up
+      let supportedAfter =
+        player.row < ROWS - 1 &&
+        isSolid(getTile(player.row + 1, player.col));
+
+      if (!supportedAfter) airClimbCount++;
+      else airClimbCount = 0;
+    }
   }
-}
-
 });
 
 function gameLoop() {
