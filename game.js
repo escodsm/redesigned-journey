@@ -125,7 +125,11 @@ function resetLevel() {
   map = generateMountain();
 }
 
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", function(e) {
+
+  if (["ArrowLeft", "ArrowRight", "ArrowUp"].includes(e.key)) {
+    e.preventDefault();
+  }
 
   if (e.key === "ArrowLeft" && player.col > 0) {
     player.col--;
@@ -135,11 +139,9 @@ document.addEventListener("keydown", e => {
     player.col++;
   }
 
-  if (e.key === "ArrowUp") {
-  if (player.row > 0 && map[player.row - 1][player.col] === 0) {
-    player.row--;
+  if (e.key === "ArrowUp" && player.row > 0) {
+    player.row++;
   }
-}
 
 });
 
