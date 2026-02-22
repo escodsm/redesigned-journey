@@ -67,6 +67,13 @@ function draw() {
   // Draw player
   drawTile(player.col, player.row, "#00ffff");
 
+  // Debug tile markers
+ctx.fillStyle = "red";
+ctx.fillRect(player.col * TILE, (player.row + 1) * TILE, TILE, TILE);
+
+ctx.fillStyle = "blue";
+ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
+
   // Draw rocks
   rocks.forEach(rock => {
     drawTile(rock.col, rock.row, "#aaaaaa");
