@@ -1,4 +1,4 @@
-//ver 5.2
+//ver 5.3
 const TILE = 16;
 const COLS = 20;
 const ROWS = 30;
@@ -30,8 +30,8 @@ const MAX_JUMP_UP = 1;       // max vertical gap in tiles between reachable plat
 const MAX_JUMP_ACROSS = 5;   // max horizontal shift between successive platforms
 const MIN_PLATFORM_WIDTH = 3;
 const MAX_PLATFORM_WIDTH = 9;
-const GRAVITY = 1;              // tiles per tick (1 = current behavior)
-const FALL_DAMAGE_THRESHOLD = 8; // tiles fallen before losing a heart
+const GRAVITY = 0.8;              // tiles per tick (1 = current behavior)
+const FALL_DAMAGE_THRESHOLD = 4; // tiles fallen before losing a heart
 
 // === NEW: Collapse system ===
 let collapsingPlatforms = []; // active collapses (objects)
@@ -175,8 +175,8 @@ function checkForCollapseArming() {
     start,
     end,
     dir: Math.random() < 0.5 ? "left" : "right",
-    delay: 18,     // ticks before first crumble
-    stepDelay: 8   // ticks between each tile collapse
+    delay: 28,     // ticks before first crumble
+    stepDelay: 10   // ticks between each tile collapse
   });
 }
 
