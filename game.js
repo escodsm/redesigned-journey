@@ -50,7 +50,7 @@ function generateMountain() {
 
   // === First guaranteed reachable platform ===
   // Always 2 tiles above spawn, centered near player
-  let firstRow = ROWS - 2;
+  let firstRow = ROWS - 3;
   let firstWidth = 5;
   let firstCol = player.col - 2;
 
