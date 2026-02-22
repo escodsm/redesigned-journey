@@ -13,7 +13,7 @@ let hearts = 4;
 let airClimbCount = 0;
 let fallDistance = 0;
 let isFalling = false;
-let canClimb = true;
+
 
 let level = 1;
 
@@ -101,7 +101,6 @@ if (!supported) {
   player.row++;
   isFalling = true;
   fallDistance++;
-  canClimb = false;
 } else {
   // Landed
   if (isFalling && fallDistance > 2) {
@@ -112,7 +111,6 @@ if (!supported) {
   isFalling = false;
   fallDistance = 0;
   airClimbCount = 0;
-  canClimb = true;
 }
 
 justClimbed = false;
@@ -166,7 +164,7 @@ document.addEventListener("keydown", function(e) {
     player.col++;
   }
 
-  if (e.key === "ArrowUp" && canClimb) {
+  if (e.key === "ArrowUp") {
   if (player.row > 0 && airClimbCount < 2) {
     player.row--;
     justClimbed = true;
