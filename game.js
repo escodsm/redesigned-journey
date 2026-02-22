@@ -58,7 +58,7 @@ function generateMountain() {
   firstCol = Math.max(1, Math.min(COLS - firstWidth - 1, firstCol));
 
   for (let w = 0; w < firstWidth; w++) {
-    grid[firstRow][firstCol + w] = 2;
+    grid[firstRow][firstCol + w] = 3;
   }
 
   // Continue upward from there
@@ -105,9 +105,11 @@ function draw() {
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (map[r][c] === 1) {
-        drawTile(c, r, "#654321"); // ground
+        drawTile(c, r, "#654321");
       } else if (map[r][c] === 2) {
-        drawTile(c, r, "#8b5a2b"); // brown platform
+        drawTile(c, r, "#8b5a2b"); // collapsing
+      } else if (map[r][c] === 3) {
+        drawTile(c, r, "#a07040"); // slightly lighter = safe
       }
     }
   }
