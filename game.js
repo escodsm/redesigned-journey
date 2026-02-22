@@ -143,6 +143,7 @@ document.addEventListener("keydown", function(e) {
 
   if (e.key === "ArrowUp" && player.row > 0) {
     player.row--;
+    console.log("Key pressed:", e.key);
   }
 
 });
