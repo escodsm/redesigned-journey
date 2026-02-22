@@ -140,7 +140,7 @@ document.addEventListener("keydown", function(e) {
   }
 
   if (e.key === "ArrowUp" && player.row > 0) {
-    player.row++;
+    player.row--;
   }
 
 });
