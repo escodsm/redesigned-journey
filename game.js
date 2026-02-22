@@ -8,6 +8,8 @@ canvas.height = ROWS * TILE;
 
 const ctx = canvas.getContext("2d");
 
+canvas.focus();
+
 let level = 1;
 
 let player = {
