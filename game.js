@@ -164,11 +164,21 @@ document.addEventListener("keydown", function(e) {
     player.col++;
   }
 
-  if (e.key === "ArrowUp") {
-  if (player.row > 0 && airClimbCount < 2) {
+if (e.key === "ArrowUp") {
+
+  let supported =
+    player.row < ROWS - 1 &&
+    map[player.row + 1][player.col] === 1;
+
+  if (player.row > 0 && (supported || airClimbCount < 2)) {
     player.row--;
     justClimbed = true;
-    airClimbCount++;
+
+    if (!supported) {
+      airClimbCount++;
+    } else {
+      airClimbCount = 0;
+    }
   }
 }
 
