@@ -25,10 +25,10 @@ let rocks = [];
 
 // === NEW: Reachability tuning ===
 // Adjust these to match your game's feel.
-const MAX_JUMP_UP = 4;       // max vertical gap in tiles between reachable platforms
+const MAX_JUMP_UP = 5;       // max vertical gap in tiles between reachable platforms
 const MAX_JUMP_ACROSS = 5;   // max horizontal shift between successive platforms
 const MIN_PLATFORM_WIDTH = 3;
-const MAX_PLATFORM_WIDTH = 6;
+const MAX_PLATFORM_WIDTH = 9;
 
 // === NEW: Collapse system ===
 let collapsingPlatforms = []; // active collapses (objects)
