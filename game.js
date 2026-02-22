@@ -9,6 +9,11 @@ canvas.height = ROWS * TILE;
 const ctx = canvas.getContext("2d");
 
 let justClimbed = false;
+let hearts = 4;
+let airClimbCount = 0;
+let fallDistance = 0;
+let isFalling = false;
+let canClimb = true;
 
 let level = 1;
 
@@ -57,6 +62,11 @@ function draw() {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Draw hearts
+for (let i = 0; i < hearts; i++) {
+  ctx.fillStyle = "red";
+  ctx.fillRect(5 + i * 18, 5, 12, 12);
+}
   // Draw mountain
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -83,13 +93,26 @@ ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
 }
 
 function update() {
- // Gravity
 let supported =
   player.row < ROWS - 1 &&
   map[player.row + 1][player.col] === 1;
 
-if (!supported && !justClimbed) {
+if (!supported) {
   player.row++;
+  isFalling = true;
+  fallDistance++;
+  canClimb = false;
+} else {
+  // Landed
+  if (isFalling && fallDistance > 2) {
+    hearts--;
+  }
+
+  // Reset fall state
+  isFalling = false;
+  fallDistance = 0;
+  airClimbCount = 0;
+  canClimb = true;
 }
 
 justClimbed = false;
@@ -143,9 +166,12 @@ document.addEventListener("keydown", function(e) {
     player.col++;
   }
 
-  if (e.key === "ArrowUp" && player.row > 0) {
-  player.row--;
-  justClimbed = true;
+  if (e.key === "ArrowUp" && canClimb) {
+  if (player.row > 0 && airClimbCount < 2) {
+    player.row--;
+    justClimbed = true;
+    airClimbCount++;
+  }
 }
 
 });
