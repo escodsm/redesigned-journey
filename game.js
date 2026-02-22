@@ -8,7 +8,7 @@ canvas.height = ROWS * TILE;
 
 const ctx = canvas.getContext("2d");
 
-//canvas.focus();
+let justClimbed = false;
 
 let level = 1;
 
@@ -88,9 +88,11 @@ let supported =
   player.row < ROWS - 1 &&
   map[player.row + 1][player.col] === 1;
 
-if (!supported) {
+if (!supported && !justClimbed) {
   player.row++;
 }
+
+justClimbed = false;
 
   // Move rocks
   rocks.forEach(rock => rock.row += 1);
@@ -142,9 +144,9 @@ document.addEventListener("keydown", function(e) {
   }
 
   if (e.key === "ArrowUp" && player.row > 0) {
-    player.row--;
-    console.log("Key pressed:", e.key);
-  }
+  player.row--;
+  justClimbed = true;
+}
 
 });
 
