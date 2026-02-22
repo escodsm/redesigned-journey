@@ -29,6 +29,8 @@ const MAX_JUMP_UP = 8;       // max vertical gap in tiles between reachable plat
 const MAX_JUMP_ACROSS = 5;   // max horizontal shift between successive platforms
 const MIN_PLATFORM_WIDTH = 3;
 const MAX_PLATFORM_WIDTH = 9;
+const GRAVITY = 1;              // tiles per tick (1 = current behavior)
+const FALL_DAMAGE_THRESHOLD = 3; // tiles fallen before losing a heart
 
 // === NEW: Collapse system ===
 let collapsingPlatforms = []; // active collapses (objects)
@@ -210,17 +212,24 @@ function update() {
     isSolid(getTile(player.row + 1, player.col));
 
   // Gravity (but not on the same tick we climbed)
-  if (!supported && !justClimbed) {
-    player.row++;
-    isFalling = true;
-    fallDistance++;
+if (!supported && !justClimbed) {
+
+  let fallAmount = GRAVITY;
+
+  // prevent falling past bottom
+  if (player.row + fallAmount >= ROWS - 1) {
+    fallAmount = (ROWS - 1) - player.row;
   }
+
+  player.row += fallAmount;
+  isFalling = true;
+  fallDistance += fallAmount;
+}
 
   // Landing resets
 if (supported) {
 
-  // Only count real falls of 3+ tiles
-  if (isFalling && fallDistance >= 3) {
+  if (isFalling && fallDistance >= FALL_DAMAGE_THRESHOLD) {
     hearts--;
     hearts = Math.max(0, hearts);
   }
