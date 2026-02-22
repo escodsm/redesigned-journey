@@ -46,46 +46,37 @@ function generateMountain() {
     grid[ROWS - 1][c] = 1;
   }
 
-  // Build a guaranteed reachable "path" of platforms upward.
-  let currentRow = ROWS - 4;
-  let currentCol = Math.floor(COLS / 2);
+  // === First guaranteed reachable platform ===
+  // Always 2 tiles above spawn, centered near player
+  let firstRow = ROWS - 4;
+  let firstWidth = 5;
+  let firstCol = player.col - 2;
 
-  while (currentRow > 2) {
-    // platform width
-    let width = Math.floor(Math.random() * (MAX_PLATFORM_WIDTH - MIN_PLATFORM_WIDTH + 1)) + MIN_PLATFORM_WIDTH;
+  firstCol = Math.max(1, Math.min(COLS - firstWidth - 1, firstCol));
 
-    // horizontal shift within reach
-    let colShift = Math.floor(Math.random() * (MAX_JUMP_ACROSS * 2 + 1)) - MAX_JUMP_ACROSS;
+  for (let w = 0; w < firstWidth; w++) {
+    grid[firstRow][firstCol + w] = 2;
+  }
 
-    currentCol = Math.max(
-      1,
+  // Continue upward from there
+  let currentRow = firstRow;
+  let currentCol = firstCol;
+
+  while (currentRow > 3) {
+
+    let width = Math.floor(Math.random() * 3) + 3;
+
+    let colShift = Math.floor(Math.random() * 7) - 3;
+    currentCol = Math.max(1,
       Math.min(COLS - width - 1, currentCol + colShift)
     );
 
-    // vertical shift within reach (at least 2 so it doesn't feel like stairs)
-    let rowShift = Math.floor(Math.random() * MAX_JUMP_UP) + 2;
+    let rowShift = Math.floor(Math.random() * 3) + 2;
     currentRow -= rowShift;
 
-    // place platform tiles (2 = brown platform)
     for (let w = 0; w < width; w++) {
-      if (currentRow >= 0 && currentRow < ROWS) {
+      if (currentRow >= 0)
         grid[currentRow][currentCol + w] = 2;
-      }
-    }
-
-    // Optional: sprinkle a few extra random platforms nearby (still usually reachable)
-    if (Math.random() < 0.35 && currentRow > 3) {
-      let extraWidth = Math.floor(Math.random() * 3) + 2;
-      let extraRow = currentRow - (Math.random() < 0.5 ? 0 : 1);
-      let extraCol = currentCol + (Math.random() < 0.5 ? -(extraWidth + 1) : (width + 1));
-      extraCol = Math.max(0, Math.min(COLS - extraWidth, extraCol));
-
-      for (let w = 0; w < extraWidth; w++) {
-        if (extraRow >= 0 && extraRow < ROWS) {
-          // don't overwrite the main path; just add more ledges
-          if (grid[extraRow][extraCol + w] === 0) grid[extraRow][extraCol + w] = 2;
-        }
-      }
     }
   }
 
@@ -226,15 +217,18 @@ function update() {
   }
 
   // Landing resets
-  if (supported) {
-    if (isFalling && fallDistance > 2) {
-      hearts--;
-      hearts = Math.max(0, hearts);
-    }
-    isFalling = false;
-    fallDistance = 0;
-    airClimbCount = 0;
+if (supported) {
+
+  // Only count real falls of 3+ tiles
+  if (isFalling && fallDistance >= 3) {
+    hearts--;
+    hearts = Math.max(0, hearts);
   }
+
+  isFalling = false;
+  fallDistance = 0;
+  airClimbCount = 0;
+}
 
   // === NEW: arm collapse only when standing supported on brown ===
   if (supported) {
