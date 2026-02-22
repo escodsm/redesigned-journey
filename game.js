@@ -102,12 +102,11 @@ if (!supported) {
   isFalling = true;
   fallDistance++;
 } else {
-  // Landed
+
   if (isFalling && fallDistance > 2) {
     hearts--;
   }
 
-  // Reset fall state
   isFalling = false;
   fallDistance = 0;
   airClimbCount = 0;
