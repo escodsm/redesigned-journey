@@ -93,26 +93,30 @@ ctx.fillRect(player.col * TILE, (player.row - 1) * TILE, TILE, TILE);
 }
 
 function update() {
-let supported =
-  player.row < ROWS - 1 &&
-  map[player.row + 1][player.col] === 1;
+  let supported =
+    player.row < ROWS - 1 &&
+    map[player.row + 1][player.col] === 1;
 
-if (!supported) {
-  player.row++;
-  isFalling = true;
-  fallDistance++;
-} else {
-
-  if (isFalling && fallDistance > 2) {
-    hearts--;
+  // Gravity (but not on the same tick we climbed)
+  if (!supported && !justClimbed) {
+    player.row++;
+    isFalling = true;
+    fallDistance++;
   }
 
-  isFalling = false;
-  fallDistance = 0;
-  airClimbCount = 0;
-}
+  // Landing resets
+  if (supported) {
+    if (isFalling && fallDistance > 2) {
+      hearts--;
+      hearts = Math.max(0, hearts);
+    }
+    isFalling = false;
+    fallDistance = 0;
+    airClimbCount = 0;
+  }
 
-justClimbed = false;
+  // clear climb suppression at end of tick
+  justClimbed = false;
 
   // Move rocks
   rocks.forEach(rock => rock.row += 1);
@@ -164,20 +168,23 @@ document.addEventListener("keydown", function(e) {
   }
 
 if (e.key === "ArrowUp") {
-
-  let supported =
+  let supportedBefore =
     player.row < ROWS - 1 &&
     map[player.row + 1][player.col] === 1;
 
-  if (player.row > 0 && (supported || airClimbCount < 2)) {
+  let canClimb = supportedBefore || airClimbCount < 2;
+
+  if (player.row > 0 && canClimb) {
     player.row--;
     justClimbed = true;
 
-    if (!supported) {
-      airClimbCount++;
-    } else {
-      airClimbCount = 0;
-    }
+    // Recompute support after moving up
+    let supportedAfter =
+      player.row < ROWS - 1 &&
+      map[player.row + 1][player.col] === 1;
+
+    if (!supportedAfter) airClimbCount++;
+    else airClimbCount = 0;
   }
 }
 
